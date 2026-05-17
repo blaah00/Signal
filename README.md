@@ -1,7 +1,7 @@
 # SIGNAL
 ### Behavioral Entropy Model for Human Performance
 
-**Live site:** [blaah00.github.io/signal](https://blaah00.github.io/signal)
+**Live site:** [blaah00.github.io/signal](https://blaah00.github.io/Signal/)
 
 ---
 

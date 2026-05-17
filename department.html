@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAL — Department</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar">
+    <a href="index.html" class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">SIGNAL</span>
+      <span class="brand-tag">Behavioral Entropy Model</span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">Overview</a>
+      <a href="org.html" class="topnav-link">Organization</a>
+      <a href="department.html" class="topnav-link active">Department</a>
+      <a href="team.html" class="topnav-link">Team</a>
+      <a href="individual.html" class="topnav-link">Individual</a>
+    </nav>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="page page-dept">
+
+    <!-- ============ PAGE HEAD ============ -->
+    <section class="dept-head">
+      <div>
+        <p class="dept-eyebrow">Department</p>
+        <h1 class="dept-title" id="deptTitle">—</h1>
+        <p class="dept-sub" id="deptSub">—</p>
+      </div>
+      <div class="dept-switcher" id="deptSwitcher"></div>
+    </section>
+
+    <!-- ============ KPI ROW ============ -->
+    <section class="dept-kpis">
+      <div class="kpi-card">
+        <div class="kpi-label">Department Health</div>
+        <div class="kpi-value" id="kpiHealth">—</div>
+        <div class="kpi-sub" id="kpiHealthSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">People at Risk</div>
+        <div class="kpi-value" id="kpiRed">—</div>
+        <div class="kpi-sub" id="kpiRedSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Drift Velocity</div>
+        <div class="kpi-value" id="kpiDvel">—</div>
+        <div class="kpi-sub" id="kpiDvelSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Manager Relationship Entropy</div>
+        <div class="kpi-value" id="kpiMre">—</div>
+        <div class="kpi-sub" id="kpiMreSub">—</div>
+      </div>
+    </section>
+
+    <!-- ============ FAULT ISOLATION VERDICT ============ -->
+    <section class="dept-verdict" id="deptVerdict"></section>
+
+    <!-- ============ TEAM BUBBLES ============ -->
+    <section class="team-grid-section">
+      <div class="section-head">
+        <h2 class="section-title">Teams</h2>
+        <p class="section-sub">Each bubble is a team. Size reflects headcount. Color reflects health. Click to drill in.</p>
+      </div>
+      <div class="team-bubble-grid" id="teamBubbles"></div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span class="footer-status" id="footerStatus">—</span>
+    <span class="footer-meta">Department View</span>
+  </footer>
+
+  <!-- ============ DATA + LOGIC ============ -->
+  <script src="data.js"></script>
+  <script>
+    (function () {
+      const S = window.SIGNAL;
+      const people = S.people;
+      const teams = S.teams;
+      const DEPTS = S.DEPTS;
+      const $ = id => document.getElementById(id);
+
+      // ---------- Resolve current department from URL ----------
+      const params = new URLSearchParams(window.location.search);
+      let currentDept = params.get("dept");
+      if (!currentDept || !DEPTS.includes(currentDept)) {
+        currentDept = DEPTS[0];
+      }
+
+      // ---------- Department switcher pills ----------
+      const switcher = $("deptSwitcher");
+      DEPTS.forEach(d => {
+        const b = document.createElement("a");
+        b.className = "pill" + (d === currentDept ? " pill-active" : "");
+        b.href = `department.html?dept=${encodeURIComponent(d)}`;
+        b.textContent = d;
+        switcher.appendChild(b);
+      });
+
+      // ---------- Department data ----------
+      const dp = people.filter(p => p.dept === currentDept);
+      const deptTeams = teams.filter(t => t.dept === currentDept);
+      const ds = S.getStats(dp);
+
+      // ---------- Head ----------
+      $("deptTitle").textContent = currentDept;
+      $("deptSub").textContent =
+        `${dp.length} people · ${deptTeams.length} teams`;
+
+      // ---------- KPIs ----------
+      const healthLabel = { green: "Stable", yellow: "Watch", red: "Critical" }[ds.health];
+      $("kpiHealth").textContent = healthLabel;
+      $("kpiHealth").classList.add("kpi-state-" + ds.health);
+      $("kpiHealthSub").textContent =
+        `${ds.green} stable · ${ds.yellow} drifting · ${ds.red} at risk`;
+
+      $("kpiRed").textContent = ds.red;
+      $("kpiRedSub").textContent =
+        ds.red === 0 ? "no acute drift signal"
+        : ds.red === 1 ? "1 person on a pre-attrition trajectory"
+        : `${ds.red} people on pre-attrition trajectories`;
+
+      const dvel = ds.avgDvel;
+      $("kpiDvel").textContent = (dvel >= 0 ? "+" : "") + dvel.toFixed(2);
+      $("kpiDvel").classList.add(dvel < -0.05 ? "kpi-state-red" : dvel < 0 ? "kpi-state-yellow" : "kpi-state-green");
+      $("kpiDvelSub").textContent =
+        dvel < -0.05 ? "accelerating drift"
+        : dvel < 0 ? "mild negative drift"
+        : "positive momentum";
+
+      const mre = ds.avgMre;
+      $("kpiMre").textContent = mre.toFixed(2);
+      $("kpiMre").classList.add(mre > 0.6 ? "kpi-state-red" : mre > 0.4 ? "kpi-state-yellow" : "kpi-state-green");
+      $("kpiMreSub").textContent =
+        mre > 0.6 ? "high friction with manager style across the dept"
+        : mre > 0.4 ? "moderate friction — investigate per team"
+        : "healthy manager dynamics";
+
+      // ---------- Fault Isolation Verdict ----------
+      const verdict = $("deptVerdict");
+      // Count drifting teams in this dept
+      const teamHealthMap = deptTeams.map(t => {
+        const tp = people.filter(p => p.teamId === t.id);
+        const ts = S.getStats(tp);
+        const mreStats = S.teamMreStats(t.id);
+        return { team: t, stats: ts, mre: mreStats };
+      });
+      const driftingTeams = teamHealthMap.filter(x => x.stats.health !== "green");
+      const highMreTeams = teamHealthMap.filter(x => x.mre.avg > 0.65);
+
+      let verdictLevel, verdictLabel, verdictText;
+      if (driftingTeams.length === deptTeams.length && deptTeams.length >= 2) {
+        verdictLevel = "systemic";
+        verdictLabel = "Systemic Variable";
+        verdictText = `All ${deptTeams.length} teams in ${currentDept} are drifting. The variable is not any single manager — it is structural. Culture, leadership, policy, or org design.`;
+      } else if (highMreTeams.length >= 1) {
+        const names = highMreTeams.map(x => x.team.name).join(", ");
+        verdictLevel = "manager";
+        verdictLabel = "Manager Variable";
+        verdictText = `Coordinated manager-relationship friction in ${names}. The common factor is the manager, not the team members.`;
+      } else if (driftingTeams.length === 0) {
+        verdictLevel = "stable";
+        verdictLabel = "No Active Fault";
+        verdictText = `${currentDept} is in balance. Continue routine monitoring.`;
+      } else {
+        verdictLevel = "individual";
+        verdictLabel = "Individual Variable";
+        verdictText = `${driftingTeams.length} of ${deptTeams.length} teams showing drift, but no coordinated team-wide signal. The drift is individual — career direction, role fit, life context.`;
+      }
+      verdict.innerHTML = `
+        <div class="verdict-card verdict-${verdictLevel}">
+          <div class="verdict-label">Fault Isolation</div>
+          <div class="verdict-headline">${verdictLabel}</div>
+          <p class="verdict-text">${verdictText}</p>
+        </div>
+      `;
+
+      // ---------- Team bubbles ----------
+      const grid = $("teamBubbles");
+      // Sort by team size desc so largest renders first
+      const sorted = teamHealthMap.slice().sort((a, b) => b.team.size - a.team.size);
+
+      sorted.forEach(({ team, stats, mre }) => {
+        const tp = people.filter(p => p.teamId === team.id);
+        const total = tp.length;
+        const reds = stats.red, yellows = stats.yellow, greens = stats.green;
+        const synCount = tp.filter(p => p.isSyntropy).length;
+
+        // Manager
+        const manager = tp.find(p => p.isManager);
+
+        const a = document.createElement("a");
+        a.className = "team-bubble team-state-" + stats.health;
+        a.href = `team.html?teamId=${team.id}`;
+
+        a.innerHTML = `
+          <div class="team-bubble-head">
+            <h3 class="team-bubble-name">${team.name}</h3>
+            <span class="team-bubble-state team-state-${stats.health}-pill">${stats.health}</span>
+          </div>
+          <div class="team-bubble-count">
+            <span class="team-bubble-num">${total}</span>
+            <span class="team-bubble-num-sub">people</span>
+          </div>
+          <div class="team-bubble-bar">
+            <span class="team-bubble-bar-seg seg-green" style="width:${(greens/total*100).toFixed(1)}%"></span>
+            <span class="team-bubble-bar-seg seg-yellow" style="width:${(yellows/total*100).toFixed(1)}%"></span>
+            <span class="team-bubble-bar-seg seg-red" style="width:${(reds/total*100).toFixed(1)}%"></span>
+          </div>
+          <div class="team-bubble-legend">
+            <span>${greens} stable</span>
+            <span>${yellows} drifting</span>
+            <span>${reds} at risk</span>
+          </div>
+          <div class="team-bubble-meta">
+            <div class="team-meta-row">
+              <span class="team-meta-label">Manager</span>
+              <span class="team-meta-val">${manager ? manager.name : "—"}</span>
+            </div>
+            <div class="team-meta-row">
+              <span class="team-meta-label">Avg MRE</span>
+              <span class="team-meta-val team-mre-${mre.avg > 0.6 ? 'red' : mre.avg > 0.4 ? 'yellow' : 'green'}">${mre.avg.toFixed(2)}</span>
+            </div>
+            ${synCount > 0 ? `
+            <div class="team-meta-row">
+              <span class="team-meta-label">Syntropy</span>
+              <span class="team-meta-val">${synCount}</span>
+            </div>` : ''}
+          </div>
+        `;
+        grid.appendChild(a);
+      });
+
+      // ---------- Footer ----------
+      $("footerStatus").textContent =
+        `${currentDept} · ${dp.length} people · ${deptTeams.length} teams`;
+    })();
+  </script>
+
+</body>
+</html>

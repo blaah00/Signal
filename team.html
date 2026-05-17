@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAL — Team</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar">
+    <a href="index.html" class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">SIGNAL</span>
+      <span class="brand-tag">Behavioral Entropy Model</span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">Overview</a>
+      <a href="org.html" class="topnav-link">Organization</a>
+      <a href="department.html" class="topnav-link">Department</a>
+      <a href="team.html" class="topnav-link active">Team</a>
+      <a href="individual.html" class="topnav-link">Individual</a>
+    </nav>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="page page-team">
+
+    <!-- ============ BREADCRUMB ============ -->
+    <nav class="breadcrumb">
+      <a href="index.html" class="crumb">Overview</a>
+      <span class="crumb-sep">/</span>
+      <a class="crumb" id="crumbDept">—</a>
+      <span class="crumb-sep">/</span>
+      <span class="crumb crumb-current" id="crumbTeam">—</span>
+    </nav>
+
+    <!-- ============ PAGE HEAD ============ -->
+    <section class="team-head">
+      <div>
+        <p class="team-eyebrow">Team</p>
+        <h1 class="team-title" id="teamTitle">—</h1>
+        <p class="team-sub" id="teamSub">—</p>
+      </div>
+      <div class="team-switcher" id="teamSwitcher"></div>
+    </section>
+
+    <!-- ============ KPI ROW ============ -->
+    <section class="team-kpis">
+      <div class="kpi-card">
+        <div class="kpi-label">Team Health</div>
+        <div class="kpi-value" id="kpiHealth">—</div>
+        <div class="kpi-sub" id="kpiHealthSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">At Risk</div>
+        <div class="kpi-value" id="kpiRed">—</div>
+        <div class="kpi-sub" id="kpiRedSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Avg Drift Velocity</div>
+        <div class="kpi-value" id="kpiDvel">—</div>
+        <div class="kpi-sub" id="kpiDvelSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Manager Relationship Entropy</div>
+        <div class="kpi-value" id="kpiMre">—</div>
+        <div class="kpi-sub" id="kpiMreSub">—</div>
+      </div>
+    </section>
+
+    <!-- ============ MANAGER CARD ============ -->
+    <section class="manager-section">
+      <h2 class="section-title">Manager</h2>
+      <div class="manager-card" id="managerCard"></div>
+    </section>
+
+    <!-- ============ TEAM SCATTER + ROSTER ============ -->
+    <section class="team-body">
+
+      <!-- Left: scatter -->
+      <div class="team-scatter-block">
+        <div class="block-head">
+          <h2 class="section-title">Drift Map</h2>
+          <p class="section-sub">Individual trajectories across the team</p>
+        </div>
+        <div class="team-scatter-wrap">
+          <svg id="teamScatter" class="team-scatter" viewBox="0 0 700 500" preserveAspectRatio="xMidYMid meet"></svg>
+          <div class="map-tooltip" id="tooltip"></div>
+        </div>
+      </div>
+
+      <!-- Right: roster -->
+      <div class="team-roster-block">
+        <div class="block-head">
+          <h2 class="section-title">Roster</h2>
+          <p class="section-sub">Sorted by drift velocity · click any name</p>
+        </div>
+        <div class="team-roster" id="teamRoster"></div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span class="footer-status" id="footerStatus">—</span>
+    <span class="footer-meta">Team View</span>
+  </footer>
+
+  <!-- ============ DATA + LOGIC ============ -->
+  <script src="data.js"></script>
+  <script>
+    (function () {
+      const S = window.SIGNAL;
+      const people = S.people;
+      const teams = S.teams;
+      const $ = id => document.getElementById(id);
+
+      // ---------- Resolve current team ----------
+      const params = new URLSearchParams(window.location.search);
+      let teamId = params.get("teamId");
+      let team = teams.find(t => t.id === teamId);
+      if (!team) team = teams[0];
+
+      const tp = people.filter(p => p.teamId === team.id);
+      const members = tp.filter(p => !p.isManager);
+      const manager = tp.find(p => p.isManager);
+      const ts = S.getStats(tp);
+      const mreStats = S.teamMreStats(team.id);
+
+      // ---------- Breadcrumb ----------
+      const crumbDept = $("crumbDept");
+      crumbDept.textContent = team.dept;
+      crumbDept.href = `department.html?dept=${encodeURIComponent(team.dept)}`;
+      $("crumbTeam").textContent = team.name;
+
+      // ---------- Head ----------
+      $("teamTitle").textContent = team.name;
+      $("teamSub").textContent = `${team.dept} · ${tp.length} people`;
+
+      // ---------- Team switcher (other teams in same dept) ----------
+      const switcher = $("teamSwitcher");
+      const siblingTeams = teams.filter(t => t.dept === team.dept);
+      siblingTeams.forEach(t => {
+        const a = document.createElement("a");
+        a.className = "pill" + (t.id === team.id ? " pill-active" : "");
+        a.href = `team.html?teamId=${t.id}`;
+        a.textContent = t.name;
+        switcher.appendChild(a);
+      });
+
+      // ---------- KPIs ----------
+      const healthLabel = { green: "Stable", yellow: "Watch", red: "Critical" }[ts.health];
+      $("kpiHealth").textContent = healthLabel;
+      $("kpiHealth").classList.add("kpi-state-" + ts.health);
+      $("kpiHealthSub").textContent =
+        `${ts.green} stable · ${ts.yellow} drifting · ${ts.red} at risk`;
+
+      $("kpiRed").textContent = ts.red;
+      $("kpiRedSub").textContent =
+        ts.red === 0 ? "no acute drift signal"
+        : ts.red === 1 ? "1 person on pre-attrition trajectory"
+        : `${ts.red} people on pre-attrition trajectories`;
+
+      const dvel = ts.avgDvel;
+      $("kpiDvel").textContent = (dvel >= 0 ? "+" : "") + dvel.toFixed(2);
+      $("kpiDvel").classList.add(dvel < -0.05 ? "kpi-state-red" : dvel < 0 ? "kpi-state-yellow" : "kpi-state-green");
+      $("kpiDvelSub").textContent =
+        dvel < -0.05 ? "accelerating drift"
+        : dvel < 0 ? "mild negative drift"
+        : "positive momentum";
+
+      const mre = mreStats.avg;
+      $("kpiMre").textContent = mre.toFixed(2);
+      $("kpiMre").classList.add(mre > 0.6 ? "kpi-state-red" : mre > 0.4 ? "kpi-state-yellow" : "kpi-state-green");
+      $("kpiMreSub").textContent =
+        mre > 0.65 ? `${mreStats.high} of ${mreStats.count} members in high friction — manager variable`
+        : mre > 0.4 ? "moderate friction — watch coordinated signal"
+        : "healthy manager dynamic";
+
+      // ---------- Manager Card ----------
+      if (manager) {
+        const m = manager;
+        const mState = m.derived.state;
+        const dvStr = (m.fp.dvel >= 0 ? "+" : "") + m.fp.dvel.toFixed(2);
+        $("managerCard").innerHTML = `
+          <a href="individual.html?id=${m.id}" class="manager-link">
+            <div class="manager-identity">
+              <div class="manager-avatar manager-state-${mState}">${initials(m.name)}</div>
+              <div>
+                <div class="manager-name">${m.name}</div>
+                <div class="manager-role">${m.role}</div>
+              </div>
+            </div>
+            <div class="manager-stats">
+              <div class="manager-stat">
+                <div class="manager-stat-label">State</div>
+                <div class="manager-stat-val state-${mState}">${m.archetype}</div>
+              </div>
+              <div class="manager-stat">
+                <div class="manager-stat-label">Drift</div>
+                <div class="manager-stat-val">${dvStr}</div>
+              </div>
+              <div class="manager-stat">
+                <div class="manager-stat-label">Team avg MRE</div>
+                <div class="manager-stat-val state-${mre > 0.6 ? 'red' : mre > 0.4 ? 'yellow' : 'green'}">${mre.toFixed(2)}</div>
+              </div>
+            </div>
+          </a>
+        `;
+      }
+
+      // ---------- Drift Map (team scatter) ----------
+      function renderScatter() {
+        const svg = $("teamScatter");
+        const W = 700, H = 500;
+        const PAD_L = 60, PAD_R = 24, PAD_T = 30, PAD_B = 50;
+        const innerW = W - PAD_L - PAD_R;
+        const innerH = H - PAD_T - PAD_B;
+        const toX = e => PAD_L + e * innerW;
+        const toY = a => PAD_T + (1 - a) * innerH;
+
+        let html = "";
+
+        // Grid
+        for (let i = 0; i <= 10; i++) {
+          const x = PAD_L + (i / 10) * innerW;
+          const y = PAD_T + (i / 10) * innerH;
+          const cls = i === 5 ? "grid-line-major" : "grid-line";
+          html += `<line class="${cls}" x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+innerH}"/>`;
+          html += `<line class="${cls}" x1="${PAD_L}" y1="${y}" x2="${PAD_L+innerW}" y2="${y}"/>`;
+        }
+
+        // Axes labels
+        html += `<text class="axis-label" x="${PAD_L + innerW/2}" y="${H - 14}" text-anchor="middle">Energy →</text>`;
+        html += `<text class="axis-label" x="${18}" y="${PAD_T + innerH/2}" text-anchor="middle" transform="rotate(-90 18 ${PAD_T + innerH/2})">Alignment →</text>`;
+
+        // Zone hints
+        html += `<text class="zone-text" x="${PAD_L + 14}" y="${PAD_T + innerH - 12}">Pre-attrition</text>`;
+        html += `<text class="zone-text" x="${PAD_L + innerW - 14}" y="${PAD_T + 22}" text-anchor="end">Flow</text>`;
+
+        // Trails
+        tp.forEach(p => {
+          let d = "";
+          p.derived.trail.forEach((pt, i) => {
+            d += (i === 0 ? "M" : "L") + toX(pt.e).toFixed(1) + "," + toY(pt.a).toFixed(1) + " ";
+          });
+          const c = colorVar(p.derived.state);
+          html += `<path d="${d}" class="trail" stroke="${c}"/>`;
+        });
+
+        // Dots
+        tp.forEach(p => {
+          const x = toX(p.derived.energy);
+          const y = toY(p.derived.alignment);
+          const c = colorVar(p.derived.state);
+          const r = p.isManager ? 8 : p.isSyntropy ? 7 : 6;
+
+          if (p.isSyntropy) {
+            html += `<circle cx="${x}" cy="${y}" r="${r + 4}" class="dot-syntropy-ring"/>`;
+          }
+          if (p.isManager) {
+            html += `<circle cx="${x}" cy="${y}" r="${r + 5}" class="dot-manager-ring"/>`;
+          }
+          html += `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" class="person-dot" data-id="${p.id}"/>`;
+        });
+
+        svg.innerHTML = html;
+
+        // Wire interactions
+        svg.querySelectorAll(".person-dot").forEach(dot => {
+          dot.addEventListener("mouseenter", e => showTooltip(e, dot.dataset.id));
+          dot.addEventListener("mousemove", moveTooltip);
+          dot.addEventListener("mouseleave", hideTooltip);
+          dot.addEventListener("click", () => {
+            window.location.href = `individual.html?id=${dot.dataset.id}`;
+          });
+        });
+      }
+
+      function colorVar(state) {
+        return state === "red" ? "var(--c-red)" :
+               state === "yellow" ? "var(--c-amber)" : "var(--c-green)";
+      }
+
+      // ---------- Roster ----------
+      function renderRoster() {
+        const sorted = members.slice().sort((a, b) => a.fp.dvel - b.fp.dvel);
+        const list = $("teamRoster");
+        sorted.forEach(p => {
+          const dv = p.fp.dvel;
+          const dvStr = (dv >= 0 ? "+" : "") + dv.toFixed(2);
+          const a = document.createElement("a");
+          a.className = "roster-row roster-state-" + p.derived.state;
+          a.href = `individual.html?id=${p.id}`;
+          a.innerHTML = `
+            <span class="roster-dot roster-dot-${p.derived.state}"></span>
+            <div class="roster-identity">
+              <div class="roster-name">${p.name}${p.isSyntropy ? ' <span class="roster-syn">SYN</span>' : ''}</div>
+              <div class="roster-role">${p.role}</div>
+            </div>
+            <div class="roster-meta">
+              <span class="roster-archetype">${p.archetype}</span>
+              <span class="roster-dvel">${dvStr}</span>
+              <span class="roster-mre roster-mre-${p.mre > 0.6 ? 'red' : p.mre > 0.4 ? 'yellow' : 'green'}" title="Manager Relationship Entropy">MRE ${p.mre.toFixed(2)}</span>
+            </div>
+          `;
+          list.appendChild(a);
+        });
+      }
+
+      // ---------- Tooltip ----------
+      function showTooltip(e, id) {
+        const p = people.find(x => x.id === id);
+        if (!p) return;
+        const tt = $("tooltip");
+        const dv = (p.fp.dvel >= 0 ? "+" : "") + p.fp.dvel.toFixed(2);
+        tt.innerHTML = `
+          <div class="tt-name">${p.name}${p.isSyntropy ? ' <span class="tt-syn">SYNTROPY</span>' : ''}</div>
+          <div class="tt-role">${p.role}</div>
+          <div class="tt-meta">
+            <span class="tt-state tt-state-${p.derived.state}">${p.archetype}</span>
+            <span class="tt-dvel">Δ ${dv}</span>
+          </div>
+        `;
+        tt.classList.add("tt-visible");
+        moveTooltip(e);
+      }
+      function moveTooltip(e) {
+        const tt = $("tooltip");
+        const wrap = tt.parentElement.getBoundingClientRect();
+        let x = e.clientX - wrap.left + 14;
+        let y = e.clientY - wrap.top + 14;
+        if (x + 240 > wrap.width) x = e.clientX - wrap.left - 254;
+        if (y + 110 > wrap.height) y = e.clientY - wrap.top - 124;
+        tt.style.left = x + "px";
+        tt.style.top = y + "px";
+      }
+      function hideTooltip() {
+        $("tooltip").classList.remove("tt-visible");
+      }
+
+      // ---------- Utils ----------
+      function initials(name) {
+        return name.split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase();
+      }
+
+      // ---------- Footer ----------
+      $("footerStatus").textContent =
+        `${team.name} · ${team.dept} · ${tp.length} people`;
+
+      // ---------- Boot ----------
+      renderScatter();
+      renderRoster();
+    })();
+  </script>
+
+</body>
+</html>

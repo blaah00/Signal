@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAL — Organization Drift Map</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar">
+    <a href="index.html" class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">SIGNAL</span>
+      <span class="brand-tag">Behavioral Entropy Model</span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">Overview</a>
+      <a href="org.html" class="topnav-link active">Organization</a>
+      <a href="department.html" class="topnav-link">Department</a>
+      <a href="team.html" class="topnav-link">Team</a>
+      <a href="individual.html" class="topnav-link">Individual</a>
+    </nav>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="page page-map">
+
+    <!-- ============ PAGE HEAD ============ -->
+    <section class="map-head">
+      <div>
+        <p class="map-eyebrow">Organization</p>
+        <h1 class="map-title">Drift Map</h1>
+        <p class="map-sub">
+          Every person in the organization, plotted by Energy and Alignment. The trail shows
+          the 90-day trajectory. Direction matters more than position.
+        </p>
+      </div>
+      <div class="map-meta">
+        <div class="map-meta-num" id="metaPop">—</div>
+        <div class="map-meta-label">visible population</div>
+      </div>
+    </section>
+
+    <!-- ============ CONTROLS ============ -->
+    <section class="map-controls">
+      <div class="filter-group">
+        <span class="filter-label">Department</span>
+        <div class="filter-pills" id="deptPills">
+          <button class="pill pill-active" data-dept="ALL">All</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">View</span>
+        <div class="filter-pills">
+          <button class="pill pill-active" data-view="all">All</button>
+          <button class="pill" data-view="red">At Risk</button>
+          <button class="pill" data-view="syntropy">Syntropy Triggers</button>
+          <button class="pill" data-view="preattr">Pre-Attrition</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MAP + LEGEND ============ -->
+    <section class="map-stage">
+      <div class="map-canvas-wrap">
+        <svg id="driftMap" class="drift-map" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid meet"></svg>
+        <div class="map-tooltip" id="tooltip"></div>
+      </div>
+
+      <aside class="map-legend">
+        <div class="legend-block">
+          <h3 class="legend-title">State</h3>
+          <div class="legend-row"><span class="legend-dot legend-dot-green"></span><span>Stable</span></div>
+          <div class="legend-row"><span class="legend-dot legend-dot-yellow"></span><span>Drifting</span></div>
+          <div class="legend-row"><span class="legend-dot legend-dot-red"></span><span>At risk</span></div>
+          <div class="legend-row"><span class="legend-dot legend-dot-syntropy"></span><span>Syntropy Trigger</span></div>
+        </div>
+
+        <div class="legend-block">
+          <h3 class="legend-title">How to read</h3>
+          <p class="legend-text">
+            <strong>X-axis:</strong> Energy — Thermal + Transfer output.<br>
+            <strong>Y-axis:</strong> Alignment — Resonance + Orbital fit.<br>
+            <strong>Trail:</strong> 90 days of movement. A trail pointing toward the bottom-left is a pre-attrition trajectory.
+          </p>
+        </div>
+
+        <div class="legend-block">
+          <h3 class="legend-title">Distribution</h3>
+          <div class="dist-row"><span class="dist-label">Stable</span><span class="dist-val" id="distGreen">—</span></div>
+          <div class="dist-row"><span class="dist-label">Drifting</span><span class="dist-val" id="distYellow">—</span></div>
+          <div class="dist-row"><span class="dist-label">At risk</span><span class="dist-val" id="distRed">—</span></div>
+          <div class="dist-row"><span class="dist-label">Syntropy</span><span class="dist-val" id="distSyn">—</span></div>
+        </div>
+      </aside>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span class="footer-status" id="footerStatus">—</span>
+    <span class="footer-meta">Drift Map · Org View</span>
+  </footer>
+
+  <!-- ============ DATA + LOGIC ============ -->
+  <script src="data.js"></script>
+  <script>
+    (function () {
+      const S = window.SIGNAL;
+      const people = S.people;
+      const teams = S.teams;
+      const DEPTS = S.DEPTS;
+      const $ = id => document.getElementById(id);
+
+      // ---------- State ----------
+      const state = {
+        dept: "ALL",
+        view: "all"
+      };
+
+      // ---------- Department pills ----------
+      const deptPills = $("deptPills");
+      DEPTS.forEach(d => {
+        const b = document.createElement("button");
+        b.className = "pill";
+        b.dataset.dept = d;
+        b.textContent = d;
+        deptPills.appendChild(b);
+      });
+      deptPills.querySelectorAll(".pill").forEach(p => {
+        p.onclick = () => {
+          deptPills.querySelectorAll(".pill").forEach(x => x.classList.remove("pill-active"));
+          p.classList.add("pill-active");
+          state.dept = p.dataset.dept;
+          render();
+        };
+      });
+
+      // ---------- View pills ----------
+      document.querySelectorAll('[data-view]').forEach(p => {
+        p.onclick = () => {
+          document.querySelectorAll('[data-view]').forEach(x => x.classList.remove("pill-active"));
+          p.classList.add("pill-active");
+          state.view = p.dataset.view;
+          render();
+        };
+      });
+
+      // ---------- Filter ----------
+      function getVisible() {
+        let list = people.slice();
+        if (state.dept !== "ALL") list = list.filter(p => p.dept === state.dept);
+        if (state.view === "red") list = list.filter(p => p.derived.state === "red");
+        else if (state.view === "syntropy") list = list.filter(p => p.isSyntropy);
+        else if (state.view === "preattr") list = list.filter(p => p.derived.preAttrition);
+        return list;
+      }
+
+      // ---------- Color ----------
+      function colorVar(state) {
+        return state === "red" ? "var(--c-red)" :
+               state === "yellow" ? "var(--c-amber)" : "var(--c-green)";
+      }
+
+      // ---------- Draw map ----------
+      function render() {
+        const svg = $("driftMap");
+        const visible = getVisible();
+
+        const W = 1000, H = 700;
+        const PAD_L = 70, PAD_R = 30, PAD_T = 40, PAD_B = 60;
+        const innerW = W - PAD_L - PAD_R;
+        const innerH = H - PAD_T - PAD_B;
+
+        const toX = e => PAD_L + e * innerW;
+        const toY = a => PAD_T + (1 - a) * innerH;
+
+        let html = "";
+
+        // Background grid
+        html += `<g class="grid">`;
+        for (let i = 0; i <= 10; i++) {
+          const x = PAD_L + (i / 10) * innerW;
+          const y = PAD_T + (i / 10) * innerH;
+          const isMajor = i === 5;
+          const cls = isMajor ? "grid-line-major" : "grid-line";
+          html += `<line class="${cls}" x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+innerH}"/>`;
+          html += `<line class="${cls}" x1="${PAD_L}" y1="${y}" x2="${PAD_L+innerW}" y2="${y}"/>`;
+        }
+        html += `</g>`;
+
+        // Zone labels
+        html += `<text class="zone-text" x="${PAD_L + 18}" y="${PAD_T + 28}">High Alignment · Low Energy</text>`;
+        html += `<text class="zone-text" x="${PAD_L + innerW - 18}" y="${PAD_T + 28}" text-anchor="end">Flow</text>`;
+        html += `<text class="zone-text" x="${PAD_L + 18}" y="${PAD_T + innerH - 14}">Pre-Attrition Zone</text>`;
+        html += `<text class="zone-text" x="${PAD_L + innerW - 18}" y="${PAD_T + innerH - 14}" text-anchor="end">High Energy · Low Alignment</text>`;
+
+        // Axis labels
+        html += `<text class="axis-label" x="${PAD_L + innerW / 2}" y="${H - 18}" text-anchor="middle">Energy →</text>`;
+        html += `<text class="axis-label" x="${20}" y="${PAD_T + innerH / 2}" text-anchor="middle" transform="rotate(-90 20 ${PAD_T + innerH / 2})">Alignment →</text>`;
+
+        // Axis endpoint labels
+        html += `<text class="axis-end" x="${PAD_L}" y="${H - 38}" text-anchor="start">Low</text>`;
+        html += `<text class="axis-end" x="${PAD_L + innerW}" y="${H - 38}" text-anchor="end">High</text>`;
+
+        // Dim non-visible for context (only when filtering)
+        if (visible.length < people.length) {
+          people.forEach(p => {
+            if (visible.includes(p)) return;
+            const x = toX(p.derived.energy);
+            const y = toY(p.derived.alignment);
+            html += `<circle cx="${x}" cy="${y}" r="2.5" class="dot-dim"/>`;
+          });
+        }
+
+        // Draw trails first (underlay)
+        visible.forEach(p => {
+          const tr = p.derived.trail;
+          let pathD = "";
+          tr.forEach((pt, i) => {
+            const cmd = i === 0 ? "M" : "L";
+            pathD += `${cmd}${toX(pt.e).toFixed(1)},${toY(pt.a).toFixed(1)} `;
+          });
+          const c = colorVar(p.derived.state);
+          html += `<path d="${pathD}" class="trail" stroke="${c}"/>`;
+        });
+
+        // Draw dots
+        visible.forEach(p => {
+          const x = toX(p.derived.energy);
+          const y = toY(p.derived.alignment);
+          const c = colorVar(p.derived.state);
+          const r = p.isManager ? 7 : p.isSyntropy ? 6 : 5;
+
+          if (p.isSyntropy) {
+            html += `<circle cx="${x}" cy="${y}" r="${r + 4}" class="dot-syntropy-ring"/>`;
+          }
+          html += `<circle cx="${x}" cy="${y}" r="${r}" fill="${c}" class="person-dot" data-id="${p.id}"/>`;
+        });
+
+        svg.innerHTML = html;
+
+        // Wire hover + click
+        svg.querySelectorAll(".person-dot").forEach(dot => {
+          dot.addEventListener("mouseenter", e => showTooltip(e, dot.dataset.id));
+          dot.addEventListener("mousemove", e => moveTooltip(e));
+          dot.addEventListener("mouseleave", hideTooltip);
+          dot.addEventListener("click", () => {
+            window.location.href = `individual.html?id=${dot.dataset.id}`;
+          });
+        });
+
+        // Update meta + legend numbers
+        $("metaPop").textContent = visible.length;
+        const ds = S.getStats(visible);
+        $("distGreen").textContent = ds.green;
+        $("distYellow").textContent = ds.yellow;
+        $("distRed").textContent = ds.red;
+        $("distSyn").textContent = ds.syn;
+
+        $("footerStatus").textContent =
+          `${visible.length} of ${people.length} visible · ${teams.length} teams · ${DEPTS.length} departments`;
+      }
+
+      // ---------- Tooltip ----------
+      function showTooltip(e, id) {
+        const p = people.find(x => x.id === id);
+        if (!p) return;
+        const tt = $("tooltip");
+        const dv = p.fp.dvel;
+        const dvelStr = (dv >= 0 ? "+" : "") + dv.toFixed(2);
+        tt.innerHTML = `
+          <div class="tt-name">${p.name}${p.isSyntropy ? ' <span class="tt-syn">SYNTROPY</span>' : ''}</div>
+          <div class="tt-role">${p.role}</div>
+          <div class="tt-team">${p.team} · ${p.dept}</div>
+          <div class="tt-meta">
+            <span class="tt-state tt-state-${p.derived.state}">${p.archetype}</span>
+            <span class="tt-dvel">Δ ${dvelStr}</span>
+          </div>
+        `;
+        tt.classList.add("tt-visible");
+        moveTooltip(e);
+      }
+      function moveTooltip(e) {
+        const tt = $("tooltip");
+        const wrap = tt.parentElement.getBoundingClientRect();
+        let x = e.clientX - wrap.left + 14;
+        let y = e.clientY - wrap.top + 14;
+        // keep inside wrap
+        if (x + 240 > wrap.width) x = e.clientX - wrap.left - 254;
+        if (y + 130 > wrap.height) y = e.clientY - wrap.top - 144;
+        tt.style.left = x + "px";
+        tt.style.top = y + "px";
+      }
+      function hideTooltip() {
+        $("tooltip").classList.remove("tt-visible");
+      }
+
+      // ---------- Boot ----------
+      render();
+    })();
+  </script>
+
+</body>
+</html>

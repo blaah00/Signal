@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAL — Behavioral Entropy Model</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar">
+    <a href="index.html" class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">SIGNAL</span>
+      <span class="brand-tag">Behavioral Entropy Model</span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link active">Overview</a>
+      <a href="org.html" class="topnav-link">Organization</a>
+      <a href="department.html" class="topnav-link">Department</a>
+      <a href="team.html" class="topnav-link">Team</a>
+      <a href="individual.html" class="topnav-link">Individual</a>
+    </nav>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="page">
+
+    <!-- ============ HERO ============ -->
+    <section class="hero">
+      <p class="hero-eyebrow">Behavioral Entropy Model</p>
+      <h1 class="hero-title">The signal before the resignation.</h1>
+      <p class="hero-lede">
+        Every HR tool tells you what already happened. SIGNAL reads the four behavioral
+        fingerprints that drift months before they appear in any performance metric —
+        and tells you the smallest intervention that reverses the drift.
+      </p>
+      <div class="hero-actions">
+        <a href="org.html" class="btn btn-primary">Open the drift map</a>
+        <a href="#how-it-works" class="btn btn-ghost">How it works</a>
+      </div>
+    </section>
+
+    <!-- ============ ORG HEALTH SUMMARY ============ -->
+    <section class="org-health">
+      <div class="section-head">
+        <h2 class="section-title">Organization at a glance</h2>
+        <p class="section-sub" id="orgScopeLine">—</p>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Org Health</div>
+          <div class="kpi-value" id="kpiHealth">—</div>
+          <div class="kpi-sub" id="kpiHealthSub">—</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Pre-Attrition Watch</div>
+          <div class="kpi-value" id="kpiPreAttr">—</div>
+          <div class="kpi-sub">people on a trajectory toward exit</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Syntropy Triggers</div>
+          <div class="kpi-value" id="kpiSyntropy">—</div>
+          <div class="kpi-sub">hidden stabilizers — protect these</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Avg Drift Velocity</div>
+          <div class="kpi-value" id="kpiDvel">—</div>
+          <div class="kpi-sub" id="kpiDvelSub">—</div>
+        </div>
+      </div>
+
+      <!-- Department health strip -->
+      <div class="dept-strip">
+        <div class="dept-strip-head">
+          <h3 class="dept-strip-title">Departments</h3>
+          <p class="dept-strip-sub">Health by department · click to drill in</p>
+        </div>
+        <div class="dept-strip-grid" id="deptStrip"></div>
+      </div>
+
+      <!-- Systemic Fault Isolation summary -->
+      <div class="sfi-summary">
+        <div class="sfi-head">
+          <h3 class="sfi-title">Systemic Fault Isolation</h3>
+          <p class="sfi-sub">
+            Where is the entropy actually coming from? One person drifting points to the
+            individual. A whole team drifting points to the manager. Multiple teams drifting
+            point to the system.
+          </p>
+        </div>
+        <div class="sfi-findings" id="sfiFindings"></div>
+      </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="how" id="how-it-works">
+      <div class="section-head">
+        <h2 class="section-title">How it works</h2>
+        <p class="section-sub">Four behavioral signals. One composite read.</p>
+      </div>
+
+      <div class="fp-grid">
+        <article class="fp-card">
+          <header class="fp-card-head">
+            <span class="fp-card-weight">0.25</span>
+            <h3 class="fp-card-name">Thermal</h3>
+          </header>
+          <p class="fp-card-desc">Energy output. Initiative beyond what was asked.</p>
+        </article>
+        <article class="fp-card fp-card-primary">
+          <header class="fp-card-head">
+            <span class="fp-card-weight">0.35</span>
+            <h3 class="fp-card-name">Orbital</h3>
+          </header>
+          <p class="fp-card-desc">Collaboration gravity. The earliest pre-attrition signal.</p>
+        </article>
+        <article class="fp-card">
+          <header class="fp-card-head">
+            <span class="fp-card-weight">0.25</span>
+            <h3 class="fp-card-name">Resonance</h3>
+          </header>
+          <p class="fp-card-desc">Skill–role match. When out of phase, energy cancels.</p>
+        </article>
+        <article class="fp-card">
+          <header class="fp-card-head">
+            <span class="fp-card-weight">0.15</span>
+            <h3 class="fp-card-name">Transfer</h3>
+          </header>
+          <p class="fp-card-desc">Energy direction. Thriving people give. Drifting people consume.</p>
+        </article>
+      </div>
+
+      <div class="archetype-row">
+        <article class="archetype-card">
+          <h3 class="archetype-name">Climber</h3>
+          <p class="archetype-desc">Composite trending up. Wiring matches the role.</p>
+        </article>
+        <article class="archetype-card archetype-warn">
+          <h3 class="archetype-name">Plateauer</h3>
+          <p class="archetype-desc">Score looks flat. Orbital is quietly declining. Invisible until the resignation letter.</p>
+        </article>
+        <article class="archetype-card">
+          <h3 class="archetype-name">ECG</h3>
+          <p class="archetype-desc">Oscillating. Not entropy — a recognition cycle. Needs acknowledgement, not training.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span class="footer-status" id="footerStatus">—</span>
+    <span class="footer-meta">v3 · Manager Relationship Entropy enabled</span>
+  </footer>
+
+  <!-- ============ DATA + LOGIC ============ -->
+  <script src="data.js"></script>
+  <script>
+    (function () {
+      const S = window.SIGNAL;
+      const people = S.people;
+      const teams = S.teams;
+      const DEPTS = S.DEPTS;
+
+      const $ = id => document.getElementById(id);
+
+      // ---------- Org KPIs ----------
+      const stats = S.getStats(people);
+      const preAttr = people.filter(p => p.derived.preAttrition).length;
+      const synCount = people.filter(p => p.isSyntropy).length;
+
+      const healthLabel = { green: "Stable", yellow: "Watch", red: "Critical" }[stats.health];
+      $("kpiHealth").textContent = healthLabel;
+      $("kpiHealth").classList.add("kpi-state-" + stats.health);
+      $("kpiHealthSub").textContent =
+        `${stats.green} stable · ${stats.yellow} drifting · ${stats.red} at risk`;
+
+      $("kpiPreAttr").textContent = preAttr;
+      $("kpiSyntropy").textContent = synCount;
+
+      const dvel = stats.avgDvel;
+      $("kpiDvel").textContent = (dvel >= 0 ? "+" : "") + dvel.toFixed(2);
+      $("kpiDvel").classList.add(dvel < -0.05 ? "kpi-state-red" : dvel < 0 ? "kpi-state-yellow" : "kpi-state-green");
+      $("kpiDvelSub").textContent =
+        dvel < -0.05 ? "accelerating toward disengagement"
+        : dvel < 0 ? "mild negative drift"
+        : "net positive momentum";
+
+      $("orgScopeLine").textContent =
+        `${people.length} people · ${teams.length} teams · ${DEPTS.length} departments`;
+      $("footerStatus").textContent =
+        `${people.length} people · ${teams.length} teams · ${DEPTS.length} departments`;
+
+      // ---------- Department strip ----------
+      const deptStrip = $("deptStrip");
+      DEPTS.forEach(dept => {
+        const dp = people.filter(p => p.dept === dept);
+        const ds = S.getStats(dp);
+        const reds = ds.red;
+        const yellows = ds.yellow;
+        const greens = ds.green;
+        const tot = dp.length;
+
+        const card = document.createElement("a");
+        card.href = `department.html?dept=${encodeURIComponent(dept)}`;
+        card.className = "dept-card dept-state-" + ds.health;
+        card.innerHTML = `
+          <div class="dept-card-head">
+            <span class="dept-card-name">${dept}</span>
+            <span class="dept-card-state dept-state-${ds.health}-pill">${ds.health}</span>
+          </div>
+          <div class="dept-card-count">${tot}<span class="dept-card-count-sub">people</span></div>
+          <div class="dept-card-bar">
+            <span class="dept-card-bar-seg seg-green" style="width:${(greens/tot*100).toFixed(1)}%"></span>
+            <span class="dept-card-bar-seg seg-yellow" style="width:${(yellows/tot*100).toFixed(1)}%"></span>
+            <span class="dept-card-bar-seg seg-red" style="width:${(reds/tot*100).toFixed(1)}%"></span>
+          </div>
+          <div class="dept-card-legend">
+            <span>${greens} stable</span>
+            <span>${yellows} drifting</span>
+            <span>${reds} at risk</span>
+          </div>
+        `;
+        deptStrip.appendChild(card);
+      });
+
+      // ---------- Systemic Fault Isolation findings ----------
+      const findings = [];
+
+      // 1. Find any team with high coordinated MRE → manager variable
+      teams.forEach(t => {
+        const mre = S.teamMreStats(t.id);
+        if (mre.avg > 0.65 && mre.high / mre.count > 0.6) {
+          findings.push({
+            level: "manager",
+            label: "Manager Variable",
+            scope: t.name,
+            detail: `Avg manager relationship entropy ${mre.avg.toFixed(2)} · ${mre.high} of ${mre.count} members in high friction. The common factor is the manager.`
+          });
+        }
+      });
+
+      // 2. Find any department with multiple teams drifting → systemic
+      DEPTS.forEach(dept => {
+        const deptTeams = teams.filter(t => t.dept === dept);
+        const driftingTeams = deptTeams.filter(t => {
+          const tp = people.filter(p => p.teamId === t.id);
+          const ts = S.getStats(tp);
+          return ts.health !== "green";
+        });
+        if (driftingTeams.length >= 2 && driftingTeams.length === deptTeams.length) {
+          findings.push({
+            level: "systemic",
+            label: "Systemic Variable",
+            scope: dept,
+            detail: `${driftingTeams.length} of ${deptTeams.length} teams drifting. The variable is not any one manager — it is structural.`
+          });
+        }
+      });
+
+      // 3. Healthy isolated cases
+      const isolatedReds = people.filter(p => {
+        if (p.derived.state !== "red") return false;
+        const tp = people.filter(x => x.teamId === p.teamId);
+        const ts = S.getStats(tp);
+        return ts.health === "green";
+      }).length;
+      if (isolatedReds > 0) {
+        findings.push({
+          level: "individual",
+          label: "Individual Variable",
+          scope: `${isolatedReds} people`,
+          detail: "Drifting inside otherwise healthy teams. The variable is personal — career direction, role fit, life context."
+        });
+      }
+
+      const sfiFindings = $("sfiFindings");
+      findings.forEach(f => {
+        const card = document.createElement("div");
+        card.className = "sfi-card sfi-level-" + f.level;
+        card.innerHTML = `
+          <div class="sfi-card-label">${f.label}</div>
+          <div class="sfi-card-scope">${f.scope}</div>
+          <p class="sfi-card-detail">${f.detail}</p>
+        `;
+        sfiFindings.appendChild(card);
+      });
+
+      if (findings.length === 0) {
+        sfiFindings.innerHTML = `<p class="sfi-empty">No active fault isolated. Organization is in balance.</p>`;
+      }
+    })();
+  </script>
+
+</body>
+</html>

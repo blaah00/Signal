@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIGNAL — Individual</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ============ TOP NAV ============ -->
+  <header class="topbar">
+    <a href="index.html" class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name">SIGNAL</span>
+      <span class="brand-tag">Behavioral Entropy Model</span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html" class="topnav-link">Overview</a>
+      <a href="org.html" class="topnav-link">Organization</a>
+      <a href="department.html" class="topnav-link">Department</a>
+      <a href="team.html" class="topnav-link">Team</a>
+      <a href="individual.html" class="topnav-link active">Individual</a>
+    </nav>
+  </header>
+
+  <!-- ============ MAIN ============ -->
+  <main class="page page-ind">
+
+    <!-- ============ BREADCRUMB ============ -->
+    <nav class="breadcrumb">
+      <a href="index.html" class="crumb">Overview</a>
+      <span class="crumb-sep">/</span>
+      <a class="crumb" id="crumbDept">—</a>
+      <span class="crumb-sep">/</span>
+      <a class="crumb" id="crumbTeam">—</a>
+      <span class="crumb-sep">/</span>
+      <span class="crumb crumb-current" id="crumbPerson">—</span>
+    </nav>
+
+    <!-- ============ IDENTITY + STATE ============ -->
+    <section class="ind-head">
+      <div class="ind-identity">
+        <div class="ind-avatar" id="indAvatar">—</div>
+        <div>
+          <p class="ind-eyebrow" id="indEyebrow">—</p>
+          <h1 class="ind-name" id="indName">—</h1>
+          <p class="ind-role" id="indRole">—</p>
+        </div>
+      </div>
+      <div class="ind-tags" id="indTags"></div>
+    </section>
+
+    <!-- ============ READ (plain language summary) ============ -->
+    <section class="ind-read">
+      <p class="ind-read-label">Plain language read</p>
+      <p class="ind-read-body" id="indRead">—</p>
+    </section>
+
+    <!-- ============ COMPOSITE + KPI STRIP ============ -->
+    <section class="ind-kpis">
+      <div class="kpi-card">
+        <div class="kpi-label">Composite Score</div>
+        <div class="kpi-value" id="kpiComposite">—</div>
+        <div class="kpi-sub">weighted T·0.25 O·0.35 R·0.25 Tr·0.15</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Drift Velocity</div>
+        <div class="kpi-value" id="kpiDvel">—</div>
+        <div class="kpi-sub" id="kpiDvelSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Archetype</div>
+        <div class="kpi-value" id="kpiArch">—</div>
+        <div class="kpi-sub" id="kpiArchSub">—</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Manager Relationship Entropy</div>
+        <div class="kpi-value" id="kpiMre">—</div>
+        <div class="kpi-sub" id="kpiMreSub">—</div>
+      </div>
+    </section>
+
+    <!-- ============ TWO-COLUMN BODY ============ -->
+    <section class="ind-body">
+
+      <!-- LEFT: Fingerprints + Trajectory -->
+      <div class="ind-left">
+
+        <!-- Fingerprints -->
+        <div class="ind-block">
+          <div class="block-head">
+            <h2 class="section-title">Four Fingerprints</h2>
+            <p class="section-sub">The behavioral signals driving the composite</p>
+          </div>
+          <div class="fp-bars" id="fpBars"></div>
+        </div>
+
+        <!-- 90-day trajectory -->
+        <div class="ind-block">
+          <div class="block-head">
+            <h2 class="section-title">90-Day Trajectory</h2>
+            <p class="section-sub">Direction is the signal, not position</p>
+          </div>
+          <div class="trajectory-wrap">
+            <svg id="trajectory" class="trajectory-svg" viewBox="0 0 500 360" preserveAspectRatio="xMidYMid meet"></svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Dose + Manager + Team Context -->
+      <div class="ind-right">
+
+        <!-- Entropy Source -->
+        <div class="ind-block">
+          <div class="block-head">
+            <h2 class="section-title">Entropy Source</h2>
+            <p class="section-sub">The weakest fingerprint — where to intervene</p>
+          </div>
+          <div class="entropy-card" id="entropyCard"></div>
+        </div>
+
+        <!-- Minimum Effective Dose -->
+        <div class="ind-block">
+          <div class="block-head">
+            <h2 class="section-title">Minimum Effective Dose</h2>
+            <p class="section-sub">The smallest precise intervention</p>
+          </div>
+          <div class="dose-card" id="doseCard"></div>
+        </div>
+
+        <!-- Manager Relationship -->
+        <div class="ind-block">
+          <div class="block-head">
+            <h2 class="section-title">Manager Relationship</h2>
+            <p class="section-sub">Friction with the current manager dynamic</p>
+          </div>
+          <div class="mgr-rel-card" id="mgrRelCard"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span class="footer-status" id="footerStatus">—</span>
+    <span class="footer-meta">Individual View</span>
+  </footer>
+
+  <!-- ============ DATA + LOGIC ============ -->
+  <script src="data.js"></script>
+  <script>
+    (function () {
+      const S = window.SIGNAL;
+      const people = S.people;
+      const teams = S.teams;
+      const $ = id => document.getElementById(id);
+
+      // ---------- Resolve person ----------
+      const params = new URLSearchParams(window.location.search);
+      let id = params.get("id");
+      let p = people.find(x => x.id === id);
+      if (!p) {
+        // Default to a meaningful example — pre-attrition flagged person
+        p = people.find(x => x.derived.preAttrition && !x.isManager) || people[1];
+      }
+
+      const team = teams.find(t => t.id === p.teamId);
+      const manager = people.find(x => x.teamId === p.teamId && x.isManager);
+      const teammates = people.filter(x => x.teamId === p.teamId && x.id !== p.id);
+
+      // ---------- Breadcrumb ----------
+      const crumbDept = $("crumbDept");
+      crumbDept.textContent = p.dept;
+      crumbDept.href = `department.html?dept=${encodeURIComponent(p.dept)}`;
+
+      const crumbTeam = $("crumbTeam");
+      crumbTeam.textContent = p.team;
+      crumbTeam.href = `team.html?teamId=${p.teamId}`;
+
+      $("crumbPerson").textContent = p.name;
+
+      // ---------- Identity ----------
+      $("indAvatar").textContent = initials(p.name);
+      $("indAvatar").classList.add("ind-avatar-" + p.derived.state);
+      $("indEyebrow").textContent = `${p.team} · ${p.dept}`;
+      $("indName").textContent = p.name;
+      $("indRole").textContent = p.role;
+
+      // ---------- Tags ----------
+      const tags = [];
+      if (p.derived.state === "red" && p.derived.preAttrition) {
+        tags.push({ cls: "tag-danger", label: "Pre-Attrition Watch" });
+      } else if (p.derived.state === "red") {
+        tags.push({ cls: "tag-danger", label: "At Risk" });
+      } else if (p.derived.state === "yellow") {
+        tags.push({ cls: "tag-warn", label: "Drifting" });
+      } else {
+        tags.push({ cls: "tag-good", label: "Stable" });
+      }
+      if (p.isSyntropy) tags.push({ cls: "tag-syntropy", label: "Syntropy Trigger" });
+      if (p.isManager) tags.push({ cls: "tag-neutral", label: "Manager" });
+      tags.push({ cls: "tag-neutral", label: p.archetype });
+
+      $("indTags").innerHTML = tags.map(t =>
+        `<span class="ind-tag ${t.cls}">${t.label}</span>`
+      ).join("");
+
+      // ---------- READ summary ----------
+      $("indRead").textContent = buildRead(p);
+
+      // ---------- KPIs ----------
+      $("kpiComposite").textContent = p.derived.composite.toFixed(2);
+      $("kpiComposite").classList.add("kpi-state-" + p.derived.state);
+
+      const dv = p.fp.dvel;
+      $("kpiDvel").textContent = (dv >= 0 ? "+" : "") + dv.toFixed(2);
+      $("kpiDvel").classList.add(dv < -0.15 ? "kpi-state-red" : dv < 0 ? "kpi-state-yellow" : "kpi-state-green");
+      $("kpiDvelSub").textContent =
+        dv < -0.15 ? "accelerating toward exit"
+        : dv < 0 ? "mild negative drift"
+        : dv < 0.05 ? "holding steady"
+        : "positive momentum";
+
+      $("kpiArch").textContent = p.archetype;
+      $("kpiArchSub").textContent = archetypeDescription(p.archetype);
+
+      if (p.mre === null || p.mre === undefined) {
+        $("kpiMre").textContent = "—";
+        $("kpiMreSub").textContent = "not applicable (manager role)";
+      } else {
+        $("kpiMre").textContent = p.mre.toFixed(2);
+        $("kpiMre").classList.add(p.mre > 0.6 ? "kpi-state-red" : p.mre > 0.4 ? "kpi-state-yellow" : "kpi-state-green");
+        $("kpiMreSub").textContent =
+          p.mre > 0.65 ? "high friction with manager style"
+          : p.mre > 0.4 ? "moderate friction"
+          : "healthy manager dynamic";
+      }
+
+      // ---------- Fingerprint bars ----------
+      renderFingerprints(p);
+
+      // ---------- Trajectory ----------
+      renderTrajectory(p);
+
+      // ---------- Entropy source ----------
+      const entropySource = p.derived.source;
+      const sourceVal = p.fp[entropySource.toLowerCase()];
+      $("entropyCard").innerHTML = `
+        <div class="entropy-name">${p.derived.dose.source}</div>
+        <div class="entropy-explainer">${entropyExplainer(entropySource)}</div>
+        <div class="entropy-meter">
+          <div class="entropy-meter-track">
+            <div class="entropy-meter-fill" style="width:${(sourceVal * 100).toFixed(0)}%"></div>
+          </div>
+          <span class="entropy-meter-val">${sourceVal.toFixed(2)}</span>
+        </div>
+      `;
+
+      // ---------- Dose card ----------
+      $("doseCard").innerHTML = `
+        <p class="dose-action">${p.derived.dose.action}</p>
+      `;
+
+      // ---------- Manager Relationship card ----------
+      renderManagerRelationship(p, manager);
+
+      // ---------- Footer ----------
+      $("footerStatus").textContent =
+        `${p.name} · ${p.team} · ${p.dept}`;
+
+      // =======================================================
+      //   RENDER HELPERS
+      // =======================================================
+
+      function renderFingerprints(p) {
+        const fps = [
+          { name: "Thermal",   val: p.fp.thermal,   weight: 0.25, desc: "Energy output · initiative beyond what was asked" },
+          { name: "Orbital",   val: p.fp.orbital,   weight: 0.35, desc: "Collaboration gravity · earliest pre-attrition signal" },
+          { name: "Resonance", val: p.fp.resonance, weight: 0.25, desc: "Skill–role match · alignment between wiring and task" },
+          { name: "Transfer",  val: p.fp.transfer,  weight: 0.15, desc: "Energy direction · giving vs consuming" }
+        ];
+        const wrap = $("fpBars");
+        wrap.innerHTML = "";
+        fps.forEach(fp => {
+          const isSource = fp.name === p.derived.source;
+          const row = document.createElement("div");
+          row.className = "fp-bar-row" + (isSource ? " fp-bar-source" : "");
+          row.innerHTML = `
+            <div class="fp-bar-head">
+              <span class="fp-bar-name">${fp.name}${isSource ? ' <span class="fp-source-tag">entropy source</span>' : ''}</span>
+              <span class="fp-bar-weight">w · ${fp.weight}</span>
+              <span class="fp-bar-val">${fp.val.toFixed(2)}</span>
+            </div>
+            <div class="fp-bar-track">
+              <div class="fp-bar-fill" style="width:${(fp.val * 100).toFixed(0)}%"></div>
+            </div>
+            <p class="fp-bar-desc">${fp.desc}</p>
+          `;
+          wrap.appendChild(row);
+        });
+      }
+
+      function renderTrajectory(p) {
+        const svg = $("trajectory");
+        const W = 500, H = 360;
+        const PAD_L = 50, PAD_R = 20, PAD_T = 24, PAD_B = 44;
+        const innerW = W - PAD_L - PAD_R;
+        const innerH = H - PAD_T - PAD_B;
+        const toX = e => PAD_L + e * innerW;
+        const toY = a => PAD_T + (1 - a) * innerH;
+
+        let html = "";
+
+        // Grid
+        for (let i = 0; i <= 10; i++) {
+          const x = PAD_L + (i / 10) * innerW;
+          const y = PAD_T + (i / 10) * innerH;
+          const cls = i === 5 ? "grid-line-major" : "grid-line";
+          html += `<line class="${cls}" x1="${x}" y1="${PAD_T}" x2="${x}" y2="${PAD_T+innerH}"/>`;
+          html += `<line class="${cls}" x1="${PAD_L}" y1="${y}" x2="${PAD_L+innerW}" y2="${y}"/>`;
+        }
+
+        // Axis labels
+        html += `<text class="axis-label" x="${PAD_L + innerW/2}" y="${H - 12}" text-anchor="middle">Energy →</text>`;
+        html += `<text class="axis-label" x="${14}" y="${PAD_T + innerH/2}" text-anchor="middle" transform="rotate(-90 14 ${PAD_T + innerH/2})">Alignment →</text>`;
+
+        // Zone hints
+        html += `<text class="zone-text" x="${PAD_L + 12}" y="${PAD_T + innerH - 12}">Pre-attrition</text>`;
+        html += `<text class="zone-text" x="${PAD_L + innerW - 12}" y="${PAD_T + 18}" text-anchor="end">Flow</text>`;
+
+        // Faint teammate dots for context
+        teammates.forEach(t => {
+          const x = toX(t.derived.energy);
+          const y = toY(t.derived.alignment);
+          html += `<circle cx="${x}" cy="${y}" r="3" class="dot-dim"/>`;
+        });
+
+        // Focus trail
+        const trail = p.derived.trail;
+        let d = "";
+        trail.forEach((pt, i) => {
+          d += (i === 0 ? "M" : "L") + toX(pt.e).toFixed(1) + "," + toY(pt.a).toFixed(1) + " ";
+        });
+        const c = colorVar(p.derived.state);
+        html += `<path d="${d}" class="trail trail-focus" stroke="${c}"/>`;
+
+        // Trail dots (start → end)
+        trail.forEach((pt, i) => {
+          const isStart = i === 0;
+          const isEnd = i === trail.length - 1;
+          const r = isEnd ? 7 : isStart ? 4 : 3;
+          const cls = isEnd ? "trail-dot trail-dot-end" : "trail-dot";
+          html += `<circle cx="${toX(pt.e).toFixed(1)}" cy="${toY(pt.a).toFixed(1)}" r="${r}" fill="${c}" class="${cls}"/>`;
+        });
+
+        // Labels for start and now
+        const start = trail[0];
+        const end = trail[trail.length - 1];
+        html += `<text class="trail-label" x="${toX(start.e) + 8}" y="${toY(start.a) - 6}">90 days ago</text>`;
+        html += `<text class="trail-label trail-label-end" x="${toX(end.e) + 10}" y="${toY(end.a) + 4}">Now</text>`;
+
+        svg.innerHTML = html;
+      }
+
+      function renderManagerRelationship(p, manager) {
+        const card = $("mgrRelCard");
+
+        if (p.isManager) {
+          card.innerHTML = `<p class="mgr-rel-empty">This person is a manager. Manager Relationship Entropy is measured on direct reports.</p>`;
+          return;
+        }
+
+        const mre = p.mre;
+        const teamMre = S.teamMreStats(p.teamId);
+
+        // Verdict
+        let verdictText;
+        if (mre > 0.65 && teamMre.avg > 0.6) {
+          verdictText = `High individual friction <em>and</em> coordinated team-wide friction. The signal points at the manager, not the person.`;
+        } else if (mre > 0.65) {
+          verdictText = `High individual friction, but the rest of the team reads healthy. The signal is personal — style mismatch, expectations gap, or trust break.`;
+        } else if (mre > 0.4) {
+          verdictText = `Moderate friction. Not acute, but worth a check-in before it compounds.`;
+        } else {
+          verdictText = `Healthy manager dynamic. Continue routine 1:1 cadence.`;
+        }
+
+        card.innerHTML = `
+          <div class="mgr-rel-row">
+            <div class="mgr-rel-side">
+              <div class="mgr-rel-label">This person's MRE</div>
+              <div class="mgr-rel-val mgr-rel-${mre > 0.6 ? 'red' : mre > 0.4 ? 'yellow' : 'green'}">${mre.toFixed(2)}</div>
+            </div>
+            <div class="mgr-rel-side">
+              <div class="mgr-rel-label">Team average MRE</div>
+              <div class="mgr-rel-val mgr-rel-${teamMre.avg > 0.6 ? 'red' : teamMre.avg > 0.4 ? 'yellow' : 'green'}">${teamMre.avg.toFixed(2)}</div>
+            </div>
+          </div>
+          ${manager ? `
+            <a href="individual.html?id=${manager.id}" class="mgr-rel-link">
+              <span class="mgr-rel-link-label">Manager</span>
+              <span class="mgr-rel-link-name">${manager.name}</span>
+              <span class="mgr-rel-link-role">${manager.role}</span>
+            </a>` : ''}
+          <p class="mgr-rel-verdict">${verdictText}</p>
+        `;
+      }
+
+      // =======================================================
+      //   TEXT HELPERS
+      // =======================================================
+
+      function buildRead(p) {
+        const first = p.name.split(" ")[0];
+
+        if (p.isSyntropy) {
+          return `${first} is a Syntropy Trigger — one of the people quietly reducing entropy in everyone around them. The risk is not their drift; it's their departure. When people like ${first} leave, roughly three others begin drifting within 90 days. Protect this person before you need to.`;
+        }
+
+        if (p.derived.state === "red" && p.derived.preAttrition) {
+          return `${first} is on a pre-attrition trajectory. The current state still reads in range, but the 90-day tail is pointing into the bottom-left. The signal is the direction, not the position. The window for surgical intervention is closing.`;
+        }
+
+        if (p.derived.state === "red") {
+          return `${first} is in the at-risk zone. Both energy and alignment have dropped below the working threshold. The drift is no longer subtle. Direct conversation is needed this week, not next quarter.`;
+        }
+
+        if (p.archetype === "ECG") {
+          return `${first} shows an oscillating pattern — high, then drop, then recovery. This isn't entropy. It's a recognition cycle. A raise won't hold without fixing the rhythm. They need acknowledgement architecture, not training.`;
+        }
+
+        if (p.archetype === "Plateauer") {
+          return `${first} reads flat on the composite, but watch the orbital signal. Plateauers are the dangerous archetype — invisible on every dashboard until the resignation letter arrives. Look at collaboration patterns, not output.`;
+        }
+
+        if (p.derived.state === "yellow") {
+          return `${first} is showing early drift. Nothing acute yet, but the trajectory has tilted. A small intervention now is cheaper than a recovery program in six months.`;
+        }
+
+        return `${first} is in flow. Energy and alignment are both healthy, drift is positive. The model has no intervention to recommend. Keep the conditions that produced this result.`;
+      }
+
+      function entropyExplainer(name) {
+        const map = {
+          "Thermal":   "Their energy output has cooled. They are no longer initiating beyond what is asked.",
+          "Orbital":   "They are drifting from the team's collaborative core. This is the earliest pre-attrition signal.",
+          "Resonance": "Their strongest skill is no longer their primary task. Energy is cancelling, not amplifying.",
+          "Transfer":  "They have stopped giving energy to others — usually because they have stopped receiving acknowledgement."
+        };
+        return map[name] || "";
+      }
+
+      function archetypeDescription(arch) {
+        return {
+          "Climber":   "consistent upward trajectory",
+          "Plateauer": "flat composite — watch the orbital signal",
+          "ECG":       "oscillating · needs recognition, not training"
+        }[arch] || "—";
+      }
+
+      function colorVar(state) {
+        return state === "red" ? "var(--c-red)" :
+               state === "yellow" ? "var(--c-amber)" : "var(--c-green)";
+      }
+
+      function initials(name) {
+        return name.split(" ").map(s => s[0]).slice(0, 2).join("").toUpperCase();
+      }
+    })();
+  </script>
+
+</body>
+</html>
